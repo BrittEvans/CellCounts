@@ -4,8 +4,7 @@ import plotly.graph_objects as go
 import cell_stats
 
 
-def dapi_percents(my_stats: cell_stats.CellStats,
-                  n_cols: int = 4) -> go.Figure:
+def dapi_percents(my_stats: cell_stats.CellStats, n_cols: int = 4) -> go.Figure:
     labels_melted = my_stats.mouse_labels.transpose(
         include_header=True, header_name="mouse", column_names=" "
     )
@@ -33,8 +32,6 @@ def dapi_percents(my_stats: cell_stats.CellStats,
         showticklabels=True,
         rangemode="tozero",
     )
-    fig.update_layout(
-        height=n_rows * 300
-    )
-    fig.update_traces(boxmean="sd", pointpos=0)
+    fig.update_layout(height=n_rows * 300)
+    fig.update_traces(boxmean="sd", pointpos=0, fillcolor="rgba(0,0,0,0)")
     return fig
