@@ -33,5 +33,5 @@ def dapi_percents(my_stats: cell_stats.CellStats, n_cols: int = 4) -> go.Figure:
         rangemode="tozero",
     )
     fig.update_layout(height=n_rows * 300)
-    fig.update_traces(boxmean="mean", pointpos=0, fillcolor="rgba(0,0,0,0)")
+    fig.update_traces(boxmean=True, pointpos=0, fillcolor="rgba(0,0,0,0)")
     return fig
