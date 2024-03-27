@@ -156,10 +156,21 @@ def gen_excel_output(stats: CellStats) -> io.BytesIO:
     with Workbook(output) as wb:
         n_top = stats.top_output.height
         n_middle = stats.middle_output.height
+        n_labels = stats.mouse_labels.height
+
+        stats.mouse_labels.write_excel(
+            workbook=wb,
+            worksheet="Cell Count Summary",
+            header_format={"bold": True},
+            autofit=True,
+            autofilter=False,
+            column_formats={" ": {"bold": True}},
+        )
+
         stats.top_output.write_excel(
             workbook=wb,
             worksheet="Cell Count Summary",
-            position=(0, 0),
+            position=(n_labels + 1, 0),
             header_format={"bold": True},
             autofit=True,
             autofilter=False,
@@ -167,7 +178,7 @@ def gen_excel_output(stats: CellStats) -> io.BytesIO:
         stats.middle_output.write_excel(
             workbook=wb,
             worksheet="Cell Count Summary",
-            position=(n_top + 2, 0),
+            position=(n_labels + 1 + n_top + 2, 0),
             header_format={"bold": True},
             autofit=True,
             autofilter=False,
@@ -175,14 +186,13 @@ def gen_excel_output(stats: CellStats) -> io.BytesIO:
         stats.bottom_output.write_excel(
             workbook=wb,
             worksheet="Cell Count Summary",
-            position=(n_top + n_middle + 4, 0),
+            position=(n_labels + 1 + n_top + 2 + n_middle + 2, 0),
             header_format={"bold": True},
             autofit=True,
             autofilter=False,
             freeze_panes=(0, 1),
         )
         # prism friendly tab
-        n_labels_prism = stats.mouse_labels.height
         n_top_prism = stats.top_as_percent.height
         stats.mouse_labels.write_excel(
             workbook=wb,
@@ -196,7 +206,7 @@ def gen_excel_output(stats: CellStats) -> io.BytesIO:
             workbook=wb,
             worksheet="Prism Friendly",
             include_header=False,
-            position=(n_labels_prism + 1, 0),
+            position=(n_labels + 1, 0),
             autofit=True,
             autofilter=False,
             dtype_formats={pl.FLOAT_DTYPES: "0.00%"},
@@ -206,7 +216,7 @@ def gen_excel_output(stats: CellStats) -> io.BytesIO:
         stats.mouse_labels.write_excel(
             workbook=wb,
             worksheet="Prism Friendly",
-            position=(n_labels_prism + n_top_prism + 2, 0),
+            position=(n_labels + n_top_prism + 2, 0),
             header_format={"bold": True},
             autofit=True,
             autofilter=False,
@@ -216,7 +226,7 @@ def gen_excel_output(stats: CellStats) -> io.BytesIO:
             workbook=wb,
             worksheet="Prism Friendly",
             include_header=False,
-            position=(n_labels_prism * 2 + n_top_prism + 3, 0),
+            position=(n_labels * 2 + n_top_prism + 3, 0),
             autofit=True,
             autofilter=False,
             dtype_formats={pl.FLOAT_DTYPES: "0.00%"},

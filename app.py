@@ -13,7 +13,7 @@ if uploaded_file is not None:
         use_container_width=True
     )
     st.download_button(
-        label="Click to Download Results!",
+        label="Click to Download Full Results!",
         data=my_output.getvalue(),
         file_name=Path(uploaded_file.name).stem + "_results.xlsx",
         mime="application/vnd.ms-excel"
