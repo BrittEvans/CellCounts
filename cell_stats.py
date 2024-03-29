@@ -23,6 +23,28 @@ class CellStats:
     top_as_percent: pl.DataFrame
     mid_as_percent: pl.DataFrame
 
+    def dapi_percents(self) -> pl.DataFrame:
+        labels_melted = self.mouse_labels.transpose(
+            include_header=True, header_name="mouse", column_names=" "
+        )
+
+        dapi_percents = self.top_as_percent.melt(
+            id_vars="Category", value_name="percent", variable_name="mouse"
+        ).join(labels_melted, on="mouse")
+
+        return dapi_percents
+
+    def all_percents(self) -> pl.DataFrame:
+        labels_melted = self.mouse_labels.transpose(
+            include_header=True, header_name="mouse", column_names=" "
+        )
+
+        all_percents = self.mid_as_percent.melt(
+            id_vars="Category", value_name="percent", variable_name="mouse"
+        ).join(labels_melted, on="mouse")
+
+        return all_percents
+
 
 def compute_stats(input_source) -> CellStats:
     # Load the cell data

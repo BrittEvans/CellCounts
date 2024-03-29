@@ -1,4 +1,5 @@
 import streamlit as st
+import polars as pl
 from pathlib import Path
 
 import cell_stats
@@ -22,7 +23,25 @@ if uploaded_file is not None:
     )
     st.header("Percent of DAPI Charts")
     st.plotly_chart(
-        charts.dapi_percents(my_stats),
+        charts.dapi_percents(my_stats.dapi_percents()),
         use_container_width=True
     )
+    st.header("All Percent Charts")
+    st.plotly_chart(
+        charts.dapi_percents(my_stats.all_percents()),
+        use_container_width=True
+    )
+#    print(my_stats.dapi_percents())
+#    st.plotly_chart(
+#        charts.strip_bar(my_stats.dapi_percents().filter(pl.col("Category") == "tdtomato/DAPI" )),
+#        #charts.dapi_percents(my_stats),
+#        use_container_width=True
+#    )
+#    st.header("All Percent Charts")
+#    print(my_stats.all_percents())
+#    st.plotly_chart(
+#        charts.strip_bar(my_stats.dapi_percents().filter(pl.col("Category") == "tdtomato/DAPI" )),
+#        charts.dapi_percents(my_stats.all_percents()),
+#        use_container_width=True
+#    )
 
