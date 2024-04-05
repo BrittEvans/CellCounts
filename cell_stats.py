@@ -26,16 +26,17 @@ class CellStats:
     # Mice that aren't labeled yet
     mice_to_drop: list[str]
 
-    def dapi_percents(self) -> pl.DataFrame:
+    # Primary category
+    primary_category: str
+
+    def primary_percents(self) -> pl.DataFrame:
         labels_melted = self.mouse_labels.transpose(
             include_header=True, header_name="mouse", column_names=" "
         )
 
-        dapi_percents = self.top_as_percent.melt(
+        return self.top_as_percent.melt(
             id_vars="Category", value_name="percent", variable_name="mouse"
         ).join(labels_melted, on="mouse")
-
-        return dapi_percents
 
     def all_percents(self) -> pl.DataFrame:
         labels_melted = self.mouse_labels.transpose(
@@ -67,6 +68,7 @@ def compute_stats(input_source) -> CellStats:
             input_source, sheet_name="Categories", read_options={"has_header": False}
         ).rows()
     )
+    primary_category = categories[1]
 
     # Load the groups
     groups = pl.read_excel(input_source, sheet_name="Groups")
@@ -84,16 +86,14 @@ def compute_stats(input_source) -> CellStats:
     # If there aren't any for the primary category, drop those mice
     mice_with_counts = (
         cell_data.group_by("Filename")
-        .agg(pl.col(cats[0]).sum())
-        .filter(pl.col(cats[0]) > 0)["Filename"]
+        .agg(pl.col(primary_category).sum())
+        .filter(pl.col(primary_category) > 0)["Filename"]
     )
-    mice_to_drop = set(column_order) - set(mice_with_counts)
+    mice_to_drop = [i for i in column_order if i not in mice_with_counts]
 
     if mice_to_drop:
         cell_data = cell_data.filter(~pl.col("Filename").is_in(mice_to_drop))
-        column_order = [
-            i for i in column_order if i not in mice_to_drop
-        ]
+        column_order = [i for i in column_order if i not in mice_to_drop]
         groups = groups.filter(~pl.col("Mouse").is_in(mice_to_drop))
 
     top_output = (
@@ -156,12 +156,11 @@ def compute_stats(input_source) -> CellStats:
 
     # Top as percent
     all_output = pl.concat([top_output, middle_output, bottom_output])
-    d_label = categories[1]
-    denom = top_output.row(by_predicate=pl.col("Category") == d_label)[1:]
+    denom = top_output.row(by_predicate=pl.col("Category") == primary_category)[1:]
     top_as_percent = (
-        all_output.filter(pl.col("Category") != d_label)
+        all_output.filter(pl.col("Category") != primary_category)
         .select(
-            pl.concat_str("Category", pl.lit(d_label), separator="/"),
+            pl.concat_str("Category", pl.lit(primary_category), separator="/"),
             *[pl.col(c) / d for c, d in zip(column_order, denom, strict=True)],
         )
         .fill_nan(0)
@@ -188,7 +187,8 @@ def compute_stats(input_source) -> CellStats:
         mouse_labels,
         top_as_percent,
         mid_as_percent,
-        mice_to_drop
+        mice_to_drop,
+        primary_category,
     )
 
 

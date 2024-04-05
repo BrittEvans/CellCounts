@@ -22,15 +22,15 @@ if uploaded_file is not None:
         use_container_width=True
     )
     for mouse in my_stats.mice_to_drop:
-        st.warning(f"{mouse} has no DAPI")
-    st.header("Percent of DAPI Charts")
+        st.warning(f"{mouse} has no {my_stats.primary_category}")
+    st.header(f"Percent of {my_stats.primary_category} Charts")
     st.plotly_chart(
-        charts.dapi_percents(my_stats.dapi_percents()),
+        charts.primary_percents(my_stats.primary_percents()),
         use_container_width=True
     )
     st.header("All Percent Charts")
     st.plotly_chart(
-        charts.dapi_percents(my_stats.all_percents()),
+        charts.primary_percents(my_stats.all_percents()),
         use_container_width=True
     )
 #    print(my_stats.dapi_percents())

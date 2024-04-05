@@ -143,11 +143,11 @@ def strip_bar(
     return fig
 
 
-def dapi_percents(dapi_percents: pl.DataFrame, n_cols: int = 4) -> go.Figure:
-    n_rows = dapi_percents["Category"].n_unique() // n_cols + 1
+def primary_percents(primary: pl.DataFrame, n_cols: int = 4) -> go.Figure:
+    n_rows = primary["Category"].n_unique() // n_cols + 1
 
     fig = px.box(
-        dapi_percents,
+        primary,
         y="percent",
         color="Genotype",
         facet_col="Category",
