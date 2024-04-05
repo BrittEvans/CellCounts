@@ -23,6 +23,9 @@ class CellStats:
     top_as_percent: pl.DataFrame
     mid_as_percent: pl.DataFrame
 
+    # Mice that aren't labeled yet
+    mice_to_drop: list[str]
+
     def dapi_percents(self) -> pl.DataFrame:
         labels_melted = self.mouse_labels.transpose(
             include_header=True, header_name="mouse", column_names=" "
@@ -77,6 +80,21 @@ def compute_stats(input_source) -> CellStats:
             for num, label in categories.items()
         ]
     )
+
+    # If there aren't any for the primary category, drop those mice
+    mice_with_counts = (
+        cell_data.group_by("Filename")
+        .agg(pl.col(cats[0]).sum())
+        .filter(pl.col(cats[0]) > 0)["Filename"]
+    )
+    mice_to_drop = set(column_order) - set(mice_with_counts)
+
+    if mice_to_drop:
+        cell_data = cell_data.filter(~pl.col("Filename").is_in(mice_to_drop))
+        column_order = [
+            i for i in column_order if i not in mice_to_drop
+        ]
+        groups = groups.filter(~pl.col("Mouse").is_in(mice_to_drop))
 
     top_output = (
         cell_data.group_by("Filename")
@@ -170,6 +188,7 @@ def compute_stats(input_source) -> CellStats:
         mouse_labels,
         top_as_percent,
         mid_as_percent,
+        mice_to_drop
     )
 
 

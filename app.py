@@ -21,6 +21,8 @@ if uploaded_file is not None:
         my_stats.top_output.to_pandas(use_pyarrow_extension_array=True),
         use_container_width=True
     )
+    for mouse in my_stats.mice_to_drop:
+        st.warning(f"{mouse} has no DAPI")
     st.header("Percent of DAPI Charts")
     st.plotly_chart(
         charts.dapi_percents(my_stats.dapi_percents()),
