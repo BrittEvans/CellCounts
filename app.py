@@ -28,7 +28,8 @@ if uploaded_file is not None:
         charts.primary_percents(my_stats.primary_percents()),
         use_container_width=True
     )
-    if ap := my_stats.all_percents():
+    ap = my_stats.all_percents()
+    if ap is not None:
         st.header("All Percent Charts")
         st.plotly_chart(
             charts.primary_percents(ap),
