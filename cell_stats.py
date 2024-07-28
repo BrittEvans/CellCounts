@@ -124,30 +124,33 @@ def compute_stats(input_source) -> CellStats:
 
     # All but 1
     my_keys = [v for k, v in categories.items() if k > 1]
-    middle_output = (
-        pl.concat(
-            [
-                cell_data.filter(pl.col(a) | pl.col(b))
-                .group_by("Filename", a, b)
-                .len()
-                .select(
-                    "Filename",
-                    "len",
-                    pl.concat_str(
-                        pl.lit(a),
-                        pl.col(a).replace({True: "+", False: "-"}),
-                        pl.lit(b),
-                        pl.col(b).replace({True: "+", False: "-"}),
-                    ).alias("Category"),
-                )
-                for a, b in combinations(my_keys, 2)
-            ]
+    if len(my_keys) >= 2:
+        middle_output = (
+            pl.concat(
+                [
+                    cell_data.filter(pl.col(a) | pl.col(b))
+                    .group_by("Filename", a, b)
+                    .len()
+                    .select(
+                        "Filename",
+                        "len",
+                        pl.concat_str(
+                            pl.lit(a),
+                            pl.col(a).replace({True: "+", False: "-"}),
+                            pl.lit(b),
+                            pl.col(b).replace({True: "+", False: "-"}),
+                        ).alias("Category"),
+                    )
+                    for a, b in combinations(my_keys, 2)
+                ]
+            )
+            .pivot(index="Category", columns="Filename", values="len")
+            .pipe(ensure_columns, cols=column_order)
+            .fill_null(0)
+            .select("Category", *column_order)
         )
-        .pivot(index="Category", columns="Filename", values="len")
-        .pipe(ensure_columns, cols=column_order)
-        .fill_null(0)
-        .select("Category", *column_order)
-    )
+    else:
+        middle_output = pl.DataFrame(schema=top_output.schema)
 
     # Prism friendly
     mouse_labels = groups.transpose(
