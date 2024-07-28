@@ -28,11 +28,12 @@ if uploaded_file is not None:
         charts.primary_percents(my_stats.primary_percents()),
         use_container_width=True
     )
-    st.header("All Percent Charts")
-    st.plotly_chart(
-        charts.primary_percents(my_stats.all_percents()),
-        use_container_width=True
-    )
+    if ap := my_stats.all_percents():
+        st.header("All Percent Charts")
+        st.plotly_chart(
+            charts.primary_percents(ap),
+            use_container_width=True
+        )
 #    print(my_stats.dapi_percents())
 #    st.plotly_chart(
 #        charts.strip_bar(my_stats.dapi_percents().filter(pl.col("Category") == "tdtomato/DAPI" )),
