@@ -38,16 +38,17 @@ class CellStats:
             id_vars="Category", value_name="percent", variable_name="mouse"
         ).join(labels_melted, on="mouse")
 
-    def all_percents(self) -> pl.DataFrame:
-        labels_melted = self.mouse_labels.transpose(
-            include_header=True, header_name="mouse", column_names=" "
-        )
+    def all_percents(self) -> pl.DataFrame | None:
+        if self.mid_as_percent is not None:
+            labels_melted = self.mouse_labels.transpose(
+                include_header=True, header_name="mouse", column_names=" "
+            )
 
-        all_percents = self.mid_as_percent.melt(
-            id_vars="Category", value_name="percent", variable_name="mouse"
-        ).join(labels_melted, on="mouse")
+            all_percents = self.mid_as_percent.melt(
+                id_vars="Category", value_name="percent", variable_name="mouse"
+            ).join(labels_melted, on="mouse")
 
-        return all_percents
+            return all_percents
 
 
 def compute_stats(input_source) -> CellStats:
@@ -170,18 +171,21 @@ def compute_stats(input_source) -> CellStats:
     )
 
     # Middle as percent
-    mid_as_percent = pl.concat(
-        [
-            middle_output.filter(
-                pl.col("Category").str.contains(f"{a}+", literal=True),
-                pl.col("Category").str.contains(f"{b}", literal=True),
-            ).select(
-                pl.concat_str("Category", pl.lit(a), separator="/"),
-                pl.exclude("Category") / pl.exclude("Category").sum(),
-            )
-            for a, b in permutations(my_keys, 2)
-        ]
-    ).fill_nan(0)
+    if not middle_output.is_empty():
+        mid_as_percent = pl.concat(
+            [
+                middle_output.filter(
+                    pl.col("Category").str.contains(f"{a}+", literal=True),
+                    pl.col("Category").str.contains(f"{b}", literal=True),
+                ).select(
+                    pl.concat_str("Category", pl.lit(a), separator="/"),
+                    pl.exclude("Category") / pl.exclude("Category").sum(),
+                )
+                for a, b in permutations(my_keys, 2)
+            ]
+        ).fill_nan(0)
+    else:
+        mid_as_percent = None
 
     return CellStats(
         top_output,
@@ -266,16 +270,17 @@ def gen_excel_output(stats: CellStats) -> io.BytesIO:
             autofilter=False,
             column_formats={" ": {"bold": True}},
         )
-        stats.mid_as_percent.write_excel(
-            workbook=wb,
-            worksheet="Prism Friendly",
-            include_header=False,
-            position=(n_labels * 2 + n_top_prism + 3, 0),
-            autofit=True,
-            autofilter=False,
-            dtype_formats={pl.FLOAT_DTYPES: "0.00%"},
-            column_formats={"Category": {"bold": True}},
-            freeze_panes=(0, 1),
-        )
+        if stats.mid_as_percent is not None:
+            stats.mid_as_percent.write_excel(
+                workbook=wb,
+                worksheet="Prism Friendly",
+                include_header=False,
+                position=(n_labels * 2 + n_top_prism + 3, 0),
+                autofit=True,
+                autofilter=False,
+                dtype_formats={pl.FLOAT_DTYPES: "0.00%"},
+                column_formats={"Category": {"bold": True}},
+                freeze_panes=(0, 1),
+            )
 
     return output
